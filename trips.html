@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mumma’s Polaroid Wall</title>
+  <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Indie Flower', cursive;
+      background: #d2b48c url('https://i.imgur.com/3ZQ3ZbL.jpg') repeat; /* corkboard background */
+      background-size: cover;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      color: #5a4a3c;
+    }
+    #polaroid-wall {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: auto;
+      padding: 1rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 1rem;
+    }
+    .polaroid {
+      position: absolute;
+      width: 180px;
+      background: white;
+      border: 10px solid white;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+      border-radius: 8px;
+      cursor: grab;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 0.5rem;
+    }
+    .polaroid img {
+      width: 160px;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 4px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .caption {
+      margin-top: 0.5rem;
+      width: 160px;
+      font-family: 'Indie Flower', cursive;
+      font-size: 1.1rem;
+      border: none;
+      resize: none;
+      background: transparent;
+      outline: none;
+      text-align: center;
+      color: #5a4a3c;
+      min-height: 50px;
+    }
+    #add-photo-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #f28ab2;
+      border: none;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      color: white;
+      font-size: 32px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+    #add-photo-btn:hover {
+      background-color: #d66a8f;
+    }
+    #file-input {
+      display: none;
+    }
+    /* Responsive */
+    @media (max-width: 600px) {
+      .polaroid {
+        width: 140px;
+      }
+      .polaroid img, .caption {
+        width: 120px;
+      }
+      .caption {
+        font-size: 1rem;
+        min-height: 40px;
+      }
+      #add-photo-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 28px;
+      }
+    }
+  </style>
+  <style>
+    #home-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #f28ab2;
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transition: background-color 0.3s ease;
+      z-index: 1100;
+      text-decoration: none;
+    }
+    #home-btn:hover {
+      background-color: #d66a8f;
+    }
+  </style>
+</head>
+<body>
+  <a href="next.html" id="home-btn" title="Home">&#8962;</a>
+  <div id="polaroid-wall"></div>
+  <button id="add-photo-btn" title="Add new photo">+</button>
+  <input type="file" id="file-input" accept="image/*" />
+  <script>
+    const polaroidWall = document.getElementById('polaroid-wall');
+    const addPhotoBtn = document.getElementById('add-photo-btn');
+    const fileInput = document.getElementById('file-input');
+
+    let polaroids = [];
+
+    // Load polaroids from localStorage
+    function loadPolaroids() {
+      const saved = localStorage.getItem('polaroids');
+      if (saved) {
+        polaroids = JSON.parse(saved);
+        polaroids.forEach(p => {
+          createPolaroidElement(p);
+        });
+      }
+    }
+
+    // Save polaroids to localStorage
+    function savePolaroids() {
+      localStorage.setItem('polaroids', JSON.stringify(polaroids));
+    }
+
+    // Create polaroid DOM element
+    function createPolaroidElement(data) {
+      const polaroid = document.createElement('div');
+      polaroid.className = 'polaroid';
+      polaroid.style.top = data.top;
+      polaroid.style.left = data.left;
+
+      // Apply random rotation for polaroid effect
+      const rotation = data.rotation !== undefined ? data.rotation : (Math.random() * 10 - 5);
+      polaroid.style.transform = `rotate(${rotation}deg)`;
+      data.rotation = rotation;
+
+      const img = document.createElement('img');
+      img.src = data.image;
+      polaroid.appendChild(img);
+
+      const caption = document.createElement('textarea');
+      caption.className = 'caption';
+      caption.value = data.caption || '';
+      caption.placeholder = "Write a memory...";
+      caption.addEventListener('input', () => {
+        const index = polaroids.findIndex(p => p.id === data.id);
+        if (index !== -1) {
+          polaroids[index].caption = caption.value;
+          savePolaroids();
+        }
+      });
+      polaroid.appendChild(caption);
+
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '×';
+      deleteBtn.title = 'Delete polaroid';
+      deleteBtn.style.position = 'absolute';
+      deleteBtn.style.top = '5px';
+      deleteBtn.style.right = '5px';
+      deleteBtn.style.background = 'rgba(255, 255, 255, 0.6)';
+      deleteBtn.style.border = 'none';
+      deleteBtn.style.color = '#a00';
+      deleteBtn.style.fontSize = '16px';
+      deleteBtn.style.borderRadius = '50%';
+      deleteBtn.style.width = '24px';
+      deleteBtn.style.height = '24px';
+      deleteBtn.style.cursor = 'pointer';
+      deleteBtn.style.zIndex = '1001';
+      deleteBtn.style.opacity = '0';
+      deleteBtn.style.transition = 'opacity 0.3s ease';
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const index = polaroids.findIndex(p => p.id === data.id);
+        if (index !== -1) {
+          polaroids.splice(index, 1);
+          savePolaroids();
+          polaroidWall.removeChild(polaroid);
+        }
+      });
+      polaroid.appendChild(deleteBtn);
+
+      polaroid.addEventListener('mouseenter', () => {
+        deleteBtn.style.opacity = '1';
+      });
+      polaroid.addEventListener('mouseleave', () => {
+        deleteBtn.style.opacity = '0';
+      });
+
+      // Drag and drop
+      let offsetX, offsetY;
+      let isDragging = false;
+
+      polaroid.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - polaroid.offsetLeft;
+        offsetY = e.clientY - polaroid.offsetTop;
+        polaroid.style.cursor = 'grabbing';
+        polaroid.style.zIndex = 1000;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          let x = e.clientX - offsetX;
+          let y = e.clientY - offsetY;
+          // Keep inside wall bounds
+          const wallRect = polaroidWall.getBoundingClientRect();
+          x = Math.min(Math.max(0, x), wallRect.width - polaroid.offsetWidth);
+          y = Math.min(Math.max(0, y), wallRect.height - polaroid.offsetHeight);
+          polaroid.style.left = x + 'px';
+          polaroid.style.top = y + 'px';
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          polaroid.style.cursor = 'grab';
+          polaroid.style.zIndex = '';
+          // Save position
+          const index = polaroids.findIndex(p => p.id === data.id);
+          if (index !== -1) {
+            polaroids[index].top = polaroid.style.top;
+            polaroids[index].left = polaroid.style.left;
+            savePolaroids();
+          }
+        }
+      });
+
+      polaroidWall.appendChild(polaroid);
+    }
+
+    // Add new photo
+    addPhotoBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      // Calculate random position within the polaroid wall bounds
+      const wallRect = polaroidWall.getBoundingClientRect();
+      const maxLeft = wallRect.width - 180; // polaroid width
+      const maxTop = wallRect.height - 220; // polaroid height + caption approx
+      const left = Math.floor(Math.random() * maxLeft);
+      const top = Math.floor(Math.random() * maxTop);
+
+      const newPolaroid = {
+        id: Date.now(),
+        image: event.target.result,
+        caption: '',
+        top: top + 'px',
+        left: left + 'px'
+      };
+      polaroids.push(newPolaroid);
+      createPolaroidElement(newPolaroid);
+      savePolaroids();
+    };
+    reader.readAsDataURL(file);
+  }
+  fileInput.value = '';
+});
+
+    loadPolaroids();
+  </script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Memory Journal - Family Member</title>
+  <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: #f0e6d2;
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    h1 {
+      font-family: 'Indie Flower', cursive;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: #5a3e1b;
+    }
+    #appSection {
+      width: 320px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 3px solid rgba(255, 255, 255, 0.5);
+      border-radius: 40px 40px 160px 160px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      grid-auto-rows: 40px;
+      gap: 10px;
+      justify-items: center;
+      margin-bottom: 1rem;
+    }
+    .envelope {
+      width: 60px;
+      height: 40px;
+      background: #fff8dc;
+      border: 2px solid #d2b48c;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      font-family: 'Indie Flower', cursive;
+      font-size: 1.2rem;
+      color: #8b5e3c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+    .envelope:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    .envelope::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 20px 30px 0 30px;
+      border-color: #d2b48c transparent transparent transparent;
+      border-radius: 5px 5px 0 0;
+    }
+    #messageModal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: #fff8dc;
+      border: 2px solid #d2b48c;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      width: 90%;
+      max-width: 400px;
+      padding: 1rem;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      font-family: 'Indie Flower', cursive;
+      color: #5a3e1b;
+    }
+    #messageModal.open {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #messageModal textarea {
+      width: 100%;
+      height: 120px;
+      font-family: 'Indie Flower', cursive;
+      font-size: 1.2rem;
+      padding: 0.5rem;
+      border: 1px solid #d2b48c;
+      border-radius: 5px;
+      resize: none;
+      background: #fff8dc;
+      color: #5a3e1b;
+    }
+    #messageModal .buttons {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+    #messageModal button {
+      background: #d2b48c;
+      border: none;
+      border-radius: 5px;
+      padding: 0.5rem 1rem;
+      font-family: 'Indie Flower', cursive;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #5a3e1b;
+      transition: background-color 0.3s ease;
+    }
+    #messageModal button:hover {
+      background: #b89a5a;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 900;
+    }
+    #overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #loginSection input {
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #d2b48c;
+    }
+    #loginSection button {
+      background: #d2b48c;
+      border: none;
+      border-radius: 5px;
+      padding: 0.5rem 1rem;
+      font-family: 'Indie Flower', cursive;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #5a3e1b;
+      transition: background-color 0.3s ease;
+      width: 100%;
+    }
+    #loginSection button:hover {
+      background: #b89a5a;
+    }
+  </style>
+</head>
+<body>
+  <button id="homeBtn" aria-label="Home" style="position: fixed; top: 10px; right: 10px; font-size: 1.5rem; padding: 0.3rem 0.6rem; cursor: pointer; border-radius: 5px; border: none; background-color: #d2b48c; color: #5a3e1b;">Home</button>
+  <h1>Memory Journal - Family Member</h1>
+
+  <div id="appSection" style="display:flex; flex-direction: column; align-items: center;">
+    <button id="addEnvelopeBtn" aria-label="Add envelope" style="font-size: 2rem; margin-bottom: 1rem; cursor: pointer;">&#43;</button>
+    <div id="jar" aria-label="Jar filled with envelopes" role="list"></div>
+  </div>
+
+  <div id="overlay"></div>
+  <div id="messageModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">Message</h2>
+    <textarea id="messageText" placeholder="Write your message here..."></textarea>
+    <div class="buttons">
+      <button id="saveBtn">Save</button>
+      <button id="closeBtn">Close</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXGV4v8UV1cNgplfVC4Dh2L4W_IR6pT4E",
+      authDomain: "mother-e63ae.firebaseapp.com",
+      projectId: "mother-e63ae",
+      storageBucket: "mother-e63ae.firebasestorage.app",
+      messagingSenderId: "62469400097",
+      appId: "1:62469400097:web:618ef981239c733db6a560",
+      measurementId: "G-E354GW7ZCF"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const jar = document.getElementById('jar');
+    const messageModal = document.getElementById('messageModal');
+    const overlay = document.getElementById('overlay');
+    const messageText = document.getElementById('messageText');
+    const saveBtn = document.getElementById('saveBtn');
+    const closeBtn = document.getElementById('closeBtn');
+
+    let currentEnvelopeId = null;
+    let messages = {};
+
+    // Create envelopes in the jar
+    function createEnvelopes(count = 0) {
+      jar.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const envelope = document.createElement('div');
+        envelope.className = 'envelope';
+        envelope.textContent = String.fromCharCode(65 + (i % 26)); // Letters A-Z cyclic
+        envelope.dataset.id = i;
+        envelope.setAttribute('role', 'listitem');
+        envelope.addEventListener('click', () => openEnvelope(i));
+        jar.appendChild(envelope);
+      }
+    }
+
+    const addEnvelopeBtn = document.getElementById('addEnvelopeBtn');
+    addEnvelopeBtn.addEventListener('click', () => {
+      // Add one envelope on each click
+      const currentCount = jar.children.length;
+      createEnvelopes(currentCount + 1);
+    });
+
+    // Open envelope modal
+    function openEnvelope(id) {
+      currentEnvelopeId = id;
+      messageText.value = messages[id] || '';
+      openModal();
+    }
+
+    // Open modal and overlay
+    function openModal() {
+      messageModal.classList.add('open');
+      overlay.classList.add('active');
+      messageText.focus();
+    }
+
+    // Close modal and overlay
+    function closeModal() {
+      messageModal.classList.remove('open');
+      overlay.classList.remove('active');
+      currentEnvelopeId = null;
+    }
+
+    // Save message to Firebase
+    function saveMessage() {
+      if (currentEnvelopeId === null) return;
+      const text = messageText.value.trim();
+      if (!text) {
+        alert('Message cannot be empty');
+        return;
+      }
+      // Save message with recipient 'all' so mom can see it
+      db.ref('messages/' + currentEnvelopeId).set({ text: text, recipient: 'all' }, (error) => {
+        if (error) {
+          alert('Failed to save message: ' + error.message);
+        } else {
+          closeModal();
+        }
+      });
+    }
+
+    // Listen for real-time updates
+    db.ref('messages').on('value', snapshot => {
+      messages = snapshot.val() || {};
+      updateEnvelopes();
+    });
+
+    // Update envelopes to show if message exists
+    function updateEnvelopes() {
+      const envelopes = jar.querySelectorAll('.envelope');
+      envelopes.forEach(env => {
+        const id = env.dataset.id;
+        if (messages[id]) {
+          env.style.backgroundColor = '#fce5cd';
+          env.style.fontWeight = 'bold';
+          env.title = 'Click to read message';
+        } else {
+          env.style.backgroundColor = '#fff8dc';
+          env.style.fontWeight = 'normal';
+          env.title = 'Click to add message';
+        }
+      });
+    }
+
+    saveBtn.addEventListener('click', saveMessage);
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', closeModal);
+
+    // Initialize envelopes
+    createEnvelopes();
+  </script>
+  <script>
+    const homeBtn = document.getElementById('homeBtn');
+    homeBtn.addEventListener('click', () => {
+      window.location.href = 'next.html';
+    });
+  </script>
+</body>
+</html>

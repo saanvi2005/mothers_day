@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Favorites - Mumma's Memory Shelf</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #f9d5e5, #fcefee, #d0f0c0);
+      color: #6b4c4c;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 3rem;
+      color: #f28ab2;
+      margin-bottom: 2rem;
+      text-shadow: 1px 1px 3px #f9d5e5;
+    }
+    .shelf-container {
+      width: 90%;
+      max-width: 900px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+    }
+    .shelf {
+      background: #f9d5e5;
+      border-radius: 20px;
+      box-shadow: 2px 2px 10px #fcefee;
+      padding: 1rem;
+      flex: 1 1 280px;
+      display: flex;
+      flex-direction: column;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .shelf h2 {
+      font-family: 'Pacifico', cursive;
+      font-size: 1.8rem;
+      color: #f28ab2;
+      margin-bottom: 1rem;
+      text-align: center;
+      text-shadow: 1px 1px 3px #f9d5e5;
+    }
+    .favorites-list {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    .favorite-item {
+      background: #fcefee;
+      border-radius: 15px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      box-shadow: 1px 1px 5px #f9d5e5;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .favorite-item img {
+      max-width: 100%;
+      border-radius: 15px;
+      margin-top: 0.5rem;
+      max-height: 150px;
+      object-fit: cover;
+    }
+    .favorite-description {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #6b4c4c;
+    }
+    .delete-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #f28ab2;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      width: 28px;
+      height: 28px;
+      font-weight: bold;
+      font-size: 20px;
+      line-height: 24px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+    .delete-btn:hover {
+      background-color: #d66a8f;
+      box-shadow: 0 0 8px rgba(214, 106, 143, 0.8);
+    }
+    .add-favorite-btn {
+      background-color: #f28ab2;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      padding: 10px 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 1rem;
+      transition: background-color 0.3s ease;
+      align-self: center;
+    }
+    .add-favorite-btn:hover {
+      background-color: #d66a8f;
+    }
+    .favorite-form {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .favorite-form.active {
+      display: flex;
+    }
+    .favorite-form label {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .favorite-form textarea {
+      resize: vertical;
+      min-height: 80px;
+      border: 1px solid #f28ab2;
+      border-radius: 10px;
+      padding: 0.5rem;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1rem;
+    }
+    .favorite-form input[type="file"] {
+      border: 1px solid #f28ab2;
+      border-radius: 10px;
+      padding: 0.5rem;
+      background: white;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1rem;
+    }
+    .favorite-form button {
+      background-color: #f28ab2;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      padding: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      align-self: flex-start;
+    }
+    .favorite-form button:hover {
+      background-color: #d66a8f;
+    }
+  
+  .home-button {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background-color: #f28ab2;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 2px 2px 8px #fcefee;
+    transition: background-color 0.3s ease;
+    z-index: 10000;
+  }
+  .home-button:hover {
+    background-color: #d66a8f;
+  }
+</style>
+</head>
+<body>
+  <!-- Home button fixed at top right corner -->
+  <a href="next.html" class="home-button">Home</a>
+  <h1>Mumma's Memory Shelf</h1>
+  <div class="shelf-container" id="shelfContainer">
+    <!-- Shelves will be dynamically inserted here -->
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/favorites';
+    const categories = ['Places', 'Foods', 'Flowers', 'Books', 'Songs', 'Movies/shows'];
+    const shelfContainer = document.getElementById('shelfContainer');
+    let favoritesData = [];
+
+    function createShelf(category) {
+      const shelf = document.createElement('div');
+      shelf.className = 'shelf';
+      shelf.dataset.category = category;
+
+      const title = document.createElement('h2');
+      title.textContent = category;
+      shelf.appendChild(title);
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-favorite-btn';
+      addBtn.textContent = 'Add Favorite';
+      shelf.appendChild(addBtn);
+
+      const form = document.createElement('form');
+      form.className = 'favorite-form';
+      form.innerHTML = `
+        <label>Description:</label>
+        <textarea name="description" placeholder="Write about your favorite..."></textarea>
+        <label>Upload Photo:</label>
+        <input type="file" name="photo" accept="image/*" />
+        <button type="submit">Save</button>
+        <button type="button" class="cancel-btn">Cancel</button>
+      `;
+      shelf.appendChild(form);
+
+      const favoritesList = document.createElement('div');
+      favoritesList.className = 'favorites-list';
+      shelf.appendChild(favoritesList);
+
+      addBtn.addEventListener('click', () => {
+        form.classList.add('active');
+        addBtn.style.display = 'none';
+      });
+
+      form.querySelector('.cancel-btn').addEventListener('click', () => {
+        form.classList.remove('active');
+        addBtn.style.display = 'block';
+        form.reset();
+      });
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const description = form.description.value.trim();
+        const photoInput = form.photo;
+        if (!description && photoInput.files.length === 0) {
+          alert('Please add a description or upload a photo.');
+          return;
+        }
+        const formData = new FormData();
+        formData.append('category', category);
+        formData.append('description', description);
+        if (photoInput.files.length > 0) {
+          formData.append('photo', photoInput.files[0]);
+        }
+        try {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData,
+          });
+          if (response.ok) {
+            form.reset();
+            form.classList.remove('active');
+            addBtn.style.display = 'block';
+            loadFavorites();
+          } else {
+            alert('Failed to save favorite.');
+          }
+        } catch (error) {
+          console.error('Error saving favorite:', error);
+          alert('Error saving favorite.');
+        }
+      });
+
+      return { shelf, favoritesList };
+    }
+
+    function renderFavorites() {
+      shelfContainer.innerHTML = '';
+      categories.forEach(category => {
+        const { shelf, favoritesList } = createShelf(category);
+        const filteredFavorites = favoritesData.filter(fav => fav.category === category);
+        filteredFavorites.forEach(({ id, description, photo }) => {
+          const favDiv = document.createElement('div');
+          favDiv.className = 'favorite-item';
+          favDiv.innerHTML = `<p class="favorite-description">${description}</p>`;
+          if (photo) {
+            const img = document.createElement('img');
+            img.src = photo;
+            favDiv.appendChild(img);
+          }
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.textContent = '×';
+          deleteBtn.title = 'Delete Favorite';
+          deleteBtn.onclick = () => deleteFavorite(id);
+          favDiv.appendChild(deleteBtn);
+          favoritesList.appendChild(favDiv);
+        });
+        shelfContainer.appendChild(shelf);
+      });
+    }
+
+    async function loadFavorites() {
+      try {
+        const response = await fetch(API_URL);
+        favoritesData = await response.json();
+        renderFavorites();
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+      }
+    }
+
+    async function deleteFavorite(id) {
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          loadFavorites();
+        } else {
+          alert('Failed to delete favorite.');
+        }
+      } catch (error) {
+        console.error('Error deleting favorite:', error);
+        alert('Error deleting favorite.');
+      }
+    }
+
+    window.onload = loadFavorites;
+  </script>
+</body>
+</html>

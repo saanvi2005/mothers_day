@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>From Mummy's Diary - Recipe Journal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
+
+  body {
+    margin: 0;
+    background: #f9f5f0;
+    font-family: 'Indie Flower', cursive;
+    user-select: none;
+    overflow-x: hidden;
+  }
+
+  .flipbook-container {
+    width: 700px;
+    height: 500px;
+    margin: 40px auto;
+    perspective: 2000px;
+    position: relative;
+  }
+
+  .page {
+    width: 350px;
+    height: 500px;
+    background: #fff8f0 url('https://www.transparenttextures.com/patterns/linen.png') repeat;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-style: preserve-3d;
+    transition: transform 1s ease;
+    border: 1px solid #d8cfc4;
+    border-radius: 8px;
+    padding: 30px 25px 40px 25px;
+    box-sizing: border-box;
+  }
+
+  .page.left {
+    left: 0;
+    transform-origin: left center;
+    z-index: 2;
+  }
+
+  .page.right {
+    left: 350px;
+    transform-origin: right center;
+    z-index: 1;
+  }
+
+  .page.flipped.left {
+    transform: rotateY(-180deg);
+    z-index: 1;
+  }
+
+  .page.flipped.right {
+    transform: rotateY(180deg);
+    z-index: 2;
+  }
+
+  h1.title {
+    font-size: 2.2em;
+    margin-bottom: 10px;
+    color: #8b4a2f;
+    text-shadow: 1px 1px 0 #f0e6d2;
+  }
+
+  .recipe-step {
+    font-size: 1.2em;
+    line-height: 1.5em;
+    margin-bottom: 15px;
+    color: #5a3e2b;
+  }
+
+  .quote {
+    font-size: 1em;
+    font-style: italic;
+    color: #a67c52;
+    margin-top: 20px;
+  }
+
+  .doodles {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .doodle-heart {
+    top: 20px;
+    right: 20px;
+    width: 30px;
+    height: 30px;
+    fill: #e76f51;
+    opacity: 0.7;
+  }
+
+  .doodle-star {
+    bottom: 20px;
+    left: 20px;
+    width: 25px;
+    height: 25px;
+    fill: #f4a261;
+    opacity: 0.7;
+  }
+
+  .doodle-smile {
+    bottom: 20px;
+    right: 20px;
+    width: 30px;
+    height: 30px;
+    fill: #2a9d8f;
+    opacity: 0.7;
+  }
+
+  .nav-buttons {
+    text-align: center;
+    margin-top: 20px;
+    position: relative;
+  }
+
+  #homeBtn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2em;
+    padding: 5px 15px;
+    cursor: pointer;
+    z-index: 1000;
+  }
+
+  button {
+    background: #f4a261;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 15px;
+    font-family: 'Indie Flower', cursive;
+    font-size: 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 1px 1px 5px #b07a4f;
+    transition: background 0.3s ease;
+  }
+
+  button:hover {
+    background: #e76f51;
+    color: white;
+  }
+
+  audio {
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="flipbook-container" aria-label="From Mummy's Diary Recipe Journal" role="region">
+  <!-- Pages will be dynamically generated -->
+</div>
+
+<div class="nav-buttons">
+  <button id="prevBtn" aria-label="Previous page">Previous</button>
+  <button id="nextBtn" aria-label="Next page">Next</button>
+  <button id="addPageBtn" aria-label="Add new page" title="Add new page" style="font-size: 1.5em; padding: 5px 15px; margin-left: 10px; cursor: pointer;">&#43;</button>
+  <button id="homeBtn" aria-label="Home" title="Home" style="font-size: 1.2em; padding: 5px 15px; margin-left: 10px; cursor: pointer;">Home</button>
+</div>
+
+<audio id="pageFlipSound" src="https://actions.google.com/sounds/v1/foley/page_flip.ogg" preload="auto"></audio>
+
+<script>
+  let recipes = [];
+
+  // Fetch recipes from backend
+  async function fetchRecipes() {
+    try {
+      const response = await fetch('http://localhost:3000/entries');
+      const data = await response.json();
+      // Map entries to recipe format expected
+      recipes = data.map(entry => {
+      let steps = [];
+      let quote = '';
+      let doodles = [];
+      if (entry.text) {
+        // Parse text into steps and quote by splitting on newlines and special marker
+        const lines = entry.text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        steps = lines.filter(line => !line.startsWith('QUOTE:') && !line.startsWith('DOODLES:'));
+        const quoteLine = lines.find(line => line.startsWith('QUOTE:'));
+        if (quoteLine) quote = quoteLine.replace('QUOTE:', '').trim();
+        const doodleLine = lines.find(line => line.startsWith('DOODLES:'));
+        if (doodleLine) doodles = doodleLine.replace('DOODLES:', '').split(',').map(s => s.trim());
+      }
+      return {
+        id: entry.id,
+        title: entry.title || 'Untitled',
+        steps,
+        quote,
+        doodles
+      };
+      });
+      renderPages();
+    } catch (err) {
+      console.error('Failed to fetch recipes:', err);
+    }
+  }
+
+  const flipbookContainer = document.querySelector('.flipbook-container');
+  const pageFlipSound = document.getElementById('pageFlipSound');
+  let currentPage = 0;
+
+  function createDoodle(type) {
+    const svgNS = "http://www.w3.org/2000/svg";
+    let svg = document.createElementNS(svgNS, "svg");
+    svg.classList.add('doodles');
+    switch(type) {
+      case 'heart':
+        svg.setAttribute('class', 'doodles doodle-heart');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.innerHTML = '<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>';
+        break;
+      case 'star':
+        svg.setAttribute('class', 'doodles doodle-star');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.innerHTML = '<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>';
+        break;
+      case 'smile':
+        svg.setAttribute('class', 'doodles doodle-smile');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.innerHTML = '<circle cx="12" cy="12" r="10" stroke="none" fill="#2a9d8f"/><path d="M8 14s1.5 2 4 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="9" cy="10" r="1" fill="#fff"/><circle cx="15" cy="10" r="1" fill="#fff"/>';
+        break;
+    }
+    return svg;
+  }
+
+  function createPage(recipe, side, index) {
+    const page = document.createElement('div');
+    page.classList.add('page', side);
+    page.setAttribute('aria-label', `Page ${index + 1}: ${recipe.title}`);
+    page.setAttribute('role', 'region');
+    page.dataset.entryId = recipe.id;
+
+    const title = document.createElement('h1');
+    title.className = 'title';
+    title.textContent = recipe.title;
+    title.setAttribute('contenteditable', 'true');
+    title.setAttribute('spellcheck', 'false');
+    page.appendChild(title);
+
+    recipe.steps.forEach(step => {
+      const p = document.createElement('p');
+      p.className = 'recipe-step';
+      p.textContent = step;
+      p.setAttribute('contenteditable', 'true');
+      p.setAttribute('spellcheck', 'false');
+      page.appendChild(p);
+    });
+
+    if (recipe.quote) {
+      const quote = document.createElement('p');
+      quote.className = 'quote';
+      quote.textContent = `"${recipe.quote}"`;
+      page.appendChild(quote);
+    }
+
+    if (recipe.ytVideo) {
+      const iframe = document.createElement('iframe');
+      iframe.width = "320";
+      iframe.height = "180";
+      iframe.src = recipe.ytVideo.includes('embed') ? recipe.ytVideo : `https://www.youtube.com/embed/${extractYouTubeID(recipe.ytVideo)}`;
+      iframe.frameBorder = "0";
+      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+      iframe.allowFullscreen = true;
+      iframe.style.marginTop = "15px";
+      page.appendChild(iframe);
+    }
+
+    // Add doodles
+    if (recipe.doodles) {
+      recipe.doodles.forEach(doodleType => {
+        const doodle = createDoodle(doodleType);
+        page.appendChild(doodle);
+      });
+    }
+
+    // Save changes on blur
+    title.addEventListener('blur', () => saveEntry(page));
+    page.querySelectorAll('.recipe-step').forEach(p => {
+      p.addEventListener('blur', () => saveEntry(page));
+    });
+
+    return page;
+  }
+
+  function renderPages() {
+    flipbookContainer.innerHTML = '';
+    // Show two pages at a time: left and right
+    const leftIndex = currentPage;
+    const rightIndex = currentPage + 1;
+
+    if (leftIndex < recipes.length) {
+      const leftPage = createPage(recipes[leftIndex], 'left', leftIndex);
+      if (leftIndex < currentPage) leftPage.classList.add('flipped');
+      flipbookContainer.appendChild(leftPage);
+    }
+
+    if (rightIndex < recipes.length) {
+      const rightPage = createPage(recipes[rightIndex], 'right', rightIndex);
+      if (rightIndex < currentPage) rightPage.classList.add('flipped');
+      flipbookContainer.appendChild(rightPage);
+    }
+  }
+
+  function playFlipSound() {
+    pageFlipSound.currentTime = 0;
+    pageFlipSound.play();
+  }
+
+  function nextPage() {
+    if (currentPage + 2 < recipes.length) {
+      currentPage += 2;
+      playFlipSound();
+      renderPages();
+    }
+  }
+
+  function prevPage() {
+    if (currentPage - 2 >= 0) {
+      currentPage -= 2;
+      playFlipSound();
+      renderPages();
+    }
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', nextPage);
+  document.getElementById('prevBtn').addEventListener('click', prevPage);
+  document.getElementById('addPageBtn').addEventListener('click', addNewPage);
+
+  async function saveEntry(page) {
+    const id = page.dataset.entryId;
+    const title = page.querySelector('.title').textContent.trim();
+    const steps = Array.from(page.querySelectorAll('.recipe-step')).map(p => p.textContent.trim());
+    const quoteEl = page.querySelector('.quote');
+    const quote = quoteEl ? quoteEl.textContent.replace(/(^"|"$)/g, '').trim() : '';
+
+    // Compose text field with steps, quote, and doodles as markers
+    let text = steps.join('\n');
+    if (quote) text += '\nQUOTE: ' + quote;
+
+    // For simplicity, doodles are not saved in this version
+
+    try {
+      const response = await fetch(`http://localhost:3000/entries/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, text })
+      });
+      if (!response.ok) {
+        console.error('Failed to save entry', await response.text());
+      }
+    } catch (err) {
+      console.error('Error saving entry', err);
+    }
+  }
+
+  async function addNewPage() {
+    const newEntry = {
+      title: "New Recipe",
+      text: "Add your recipe steps here...\nQUOTE: Add a sweet quote here."
+    };
+    try {
+      const response = await fetch('http://localhost:3000/entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEntry)
+      });
+      if (response.ok) {
+        const createdEntry = await response.json();
+        recipes.push({
+          id: createdEntry.id,
+          title: createdEntry.title,
+          steps: createdEntry.text.split('\n').filter(line => !line.startsWith('QUOTE:')),
+          quote: (createdEntry.text.match(/QUOTE:(.*)/) || [])[1]?.trim() || '',
+          doodles: []
+        });
+        currentPage = recipes.length - 2; // Show new page on right side
+        renderPages();
+      } else {
+        console.error('Failed to add new page', await response.text());
+      }
+    } catch (err) {
+      console.error('Error adding new page', err);
+    }
+  }
+
+  fetchRecipes();
+
+  document.getElementById('homeBtn').addEventListener('click', () => {
+    window.location.href = 'next.html';
+  });
+</script>
+</body>
+</html>

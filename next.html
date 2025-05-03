@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>What do you want to do today?</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 90%;
+      font-family: 'Comfortaa', cursive;
+      background: url('assets/ghiback.jpg') no-repeat center center fixed;
+      background-size: cover;
+      overflow-x: hidden;
+      opacity: 0;
+      animation: fadeIn 1.5s ease forwards;
+      color: #6b4c4c;
+    }
+    /* Wrapper for clickable areas */
+    .wrapper {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    /* Clickable areas */
+    .clickable-area {
+      position: absolute;
+      cursor: pointer;
+      background-color: rgba(255, 255, 255, 0); /* fully transparent */
+      transition: background-color 0.3s ease;
+      border-radius: 15px;
+    }
+    .clickable-area:hover {
+      background-color: rgba(242, 138, 178, 0.2);
+    }
+    /* Positions and sizes of clickable areas (percentages for responsiveness) */
+    .house {
+      top: 20%;
+      right: 10%;
+      width: 30%;
+      height: 30%;
+    }
+    .tree-swing {
+      top: 20%;
+      left: 10%;
+      width: 30%;
+      height: 30%;
+    }
+    .picnic-blanket {
+      top: 75%;
+      left: 30%;
+      width: 20%;
+      height: 15%;
+    }
+    .cat-bench {
+      top: 55%;
+      left: 45%;
+      width: 12%;
+      height: 20%;
+    }
+    .bakery-stand {
+      bottom: 15%;
+      left: 65%;
+      width: 15%;
+      height: 25%;
+    }
+    .memory-image {
+      top: 38%;
+      left: 25%;
+      width: 22%;
+      height: 35%;
+      background: url('assets/memory.png') no-repeat center center;
+      background-size: contain;
+      border-radius: 50%;
+      box-shadow: none;
+      transition: transform 0.3s ease;
+    }
+    .memory-image:hover {
+      transform: translateY(-10px);
+      box-shadow: none;
+    }
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .wrapper {
+        max-width: 100%;
+        height: 100vh;
+      }
+      .house {
+        top: 58%;
+        left: 8%;
+        width: 20%;
+        height: 28%;
+      }
+      .tree-swing {
+        top: 38%;
+        left: 28%;
+        width: 18%;
+        height: 32%;
+      }
+      .picnic-blanket {
+        top: 72%;
+        left: 48%;
+        width: 25%;
+        height: 18%;
+      }
+      .cat-bench {
+        top: 53%;
+        left: 72%;
+        width: 15%;
+        height: 22%;
+      }
+      .bakery-stand {
+        top: 28%;
+        left: 68%;
+        width: 18%;
+        height: 28%;
+      }
+      .memory-image {
+        top: 35%;
+        left: 22%;
+        width: 30%;
+        height: 40%;
+      }
+    }
+    /* Fade-in animation */
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+    /* Title text */
+    h1 {
+      text-align: center;
+      font-family: 'Amatic SC', cursive;
+      font-size: 3rem;
+      color: #f28ab2;
+      margin-bottom: 1rem;
+      text-shadow: 1px 1px 3px #f9d5e5;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC&family=Comfortaa&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <h1>what do you want to do today?</h1>
+  <div class="container">
+    <a href="trips.html" class="clickable-area house" title="Cozy House" aria-label="Cozy House"></a>
+    <a href="memoryjournal.html" class="clickable-area tree-swing" title="Tree with Swing" aria-label="Tree with Swing"></a>
+    <a href="photobooth.html" class="clickable-area picnic-blanket" title="Picnic Blanket" aria-label="Picnic Blanket"></a>
+    <a href="favorites.html" class="clickable-area cat-bench" title="Cat on Bench" aria-label="Cat on Bench"></a>
+    <a href="recipes.html" class="clickable-area bakery-stand" title="Bakery Stand" aria-label="Bakery Stand"></a>
+  </div>
+</body>
+</html>

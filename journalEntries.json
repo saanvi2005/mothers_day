@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "title": "Dear Diary",
+    "text": "Here are the recipes that made our home smell like love...\nQUOTE: From Mummy's heart to our kitchen."
+  },
+  {
+    "id": 2,
+    "title": "Recipe 1",
+    "text": "Preheat oven to 375°F (190°C).\nPrepare the crust with love and care.\nSlice apples thinly and mix with cinnamon and sugar.\nQUOTE: A slice of nostalgia in every bite."
+  },
+  {
+    "id": 3,
+    "title": "REcipe 2",
+    "text": "Mix flour, eggs, milk, and a pinch of magic.\nHeat the pan and pour the batter gently.\nFlip when bubbles appear and cook until golden.\nServe with syrup and a smile.\nQUOTE: Fluffy clouds of happiness."
+  },
+  {
+    "id": 4,
+    "title": "Recipe 3",
+    "text": "Cream butter and sugar until fluffy.\nAdd eggs and vanilla extract.\nMix in flour, cinnamon, and a pinch of love.\nBake at 350°F (175°C) for 12 minutes.\nYTVIDEO:\nQUOTE: Sweetness baked with love."
+  },
+  {
+    "id": 1746293849613,
+    "text": "\nQUOTE: Add a sweet quote here.",
+    "photo": null,
+    "title": "Untitled"
+  },
+  {
+    "id": 1746293868961,
+    "text": "Add your recipe steps here...\nQUOTE: Add a sweet quote here.",
+    "photo": null
+  },
+  {
+    "id": 1746304866816,
+    "text": "Add your recipe steps here...\nQUOTE: Add a sweet quote here.",
+    "photo": null
+  }
+]

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Photobooth</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand&display=swap');
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Quicksand', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #f9d5e5, #fcefee, #d0f0c0);
+      color: #6b4c4c;
+    }
+    #container {
+      text-align: center;
+      background: #f9d5e5;
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 2px 2px 15px #fcefee;
+      width: 360px;
+    }
+    button {
+      font-family: 'Pacifico', cursive;
+      font-size: 1.5rem;
+      padding: 12px 24px;
+      margin: 10px;
+      border: none;
+      border-radius: 30px;
+      background-color: #f28ab2;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 8px rgba(242, 138, 178, 0.6);
+    }
+    button:hover {
+      background-color: #d66a8f;
+      box-shadow: 0 6px 12px rgba(214, 106, 143, 0.8);
+    }
+    #countdown {
+      font-family: 'Pacifico', cursive;
+      font-size: 6rem;
+      font-weight: bold;
+      margin: 20px 0;
+      height: 80px;
+      color: #f28ab2;
+      text-shadow: 1px 1px 3px #fcefee;
+      z-index: 10000;
+      position: relative;
+    }
+    video {
+      border-radius: 20px;
+      max-width: 320px;
+      max-height: 240px;
+      display: block;
+      margin: 0 auto;
+      box-shadow: 0 4px 10px rgba(242, 138, 178, 0.5);
+      transform: scaleX(-1);
+    }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      border: 4px solid #f28ab2;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(242, 138, 178, 0.6);
+    }
+    #buttons {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <button id="startBtn">Start Photobooth</button>
+    <div id="countdown"></div>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="photoStrip" style="display:none;"></canvas>
+    <div id="buttons" style="display:none;">
+      <button id="saveBtn">Save Photo Strip</button>
+      <button id="retakeBtn">Retake Photos</button>
+    </div>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const countdownEl = document.getElementById('countdown');
+    const video = document.getElementById('video');
+    const photoStrip = document.getElementById('photoStrip');
+    const saveBtn = document.getElementById('saveBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const buttonsDiv = document.getElementById('buttons');
+
+    let stream;
+    let photos = [];
+
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        alert('Could not access camera: ' + err.message);
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function countdown(seconds) {
+      for (let i = seconds; i > 0; i--) {
+        countdownEl.textContent = i;
+        await sleep(1000);
+      }
+      countdownEl.textContent = '';
+    }
+
+    function takePhoto() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      // Mirror the image horizontally
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Flash effect
+      flashScreen();
+      return canvas.toDataURL('image/png');
+    }
+
+    function flashScreen() {
+      const flash = document.createElement('div');
+      flash.style.position = 'fixed';
+      flash.style.top = '0';
+      flash.style.left = '0';
+      flash.style.width = '100%';
+      flash.style.height = '100%';
+      flash.style.backgroundColor = 'white';
+      flash.style.opacity = '0.7';
+      flash.style.zIndex = '9999';
+      flash.style.pointerEvents = 'none';
+      document.body.appendChild(flash);
+      setTimeout(() => {
+        flash.style.transition = 'opacity 0.5s ease';
+        flash.style.opacity = '0';
+        setTimeout(() => {
+          document.body.removeChild(flash);
+        }, 500);
+      }, 100);
+    }
+
+    async function capturePhotos() {
+      photos = [];
+      for (let i = 0; i < 3; i++) {
+        await countdown(3);
+        const photo = await takePhoto();
+        photos.push(photo);
+        if (i < 2) {
+          // Removed the "Next photo in 3..." text as per user request
+          await sleep(3000);
+        }
+      }
+    }
+
+    function combinePhotos() {
+      const width = video.videoWidth * 0.6;
+      const height = video.videoHeight * 0.6;
+      photoStrip.width = width;
+      photoStrip.height = height * photos.length;
+      const ctx = photoStrip.getContext('2d');
+      let imagesLoaded = 0;
+      photos.forEach((photo, index) => {
+        const img = new Image();
+        img.src = photo;
+        img.onload = () => {
+          ctx.drawImage(img, 0, height * index, width, height);
+          imagesLoaded++;
+          if (imagesLoaded === photos.length) {
+            photoStrip.style.display = 'block';
+          }
+        };
+      });
+    }
+
+    function downloadPhotoStrip() {
+      const link = document.createElement('a');
+      link.href = photoStrip.toDataURL('image/png');
+      link.download = 'photo-strip.png';
+      link.click();
+    }
+
+    startBtn.addEventListener('click', async () => {
+      startBtn.style.display = 'none';
+      await startCamera();
+      await capturePhotos();
+      stopCamera();
+      video.style.display = 'none';
+      combinePhotos();
+      buttonsDiv.style.display = 'block';
+    });
+
+    saveBtn.addEventListener('click', () => {
+      downloadPhotoStrip();
+    });
+
+    retakeBtn.addEventListener('click', () => {
+      photos = [];
+      photoStrip.style.display = 'none';
+      buttonsDiv.style.display = 'none';
+      video.style.display = 'block';
+      startBtn.style.display = 'block';
+      countdownEl.textContent = '';
+    });
+  </script>
+</body>
+</html>
