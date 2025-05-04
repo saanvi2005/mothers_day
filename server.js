@@ -10,6 +10,14 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+// Serve static files from the current directory
+app.use(express.static(__dirname));
+
+// Serve index.html on root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 const ENTRIES_FILE = path.join(__dirname, 'journalEntries.json');
 const FAVORITES_FILE = path.join(__dirname, 'favorites.json');
 
